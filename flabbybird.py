@@ -8,8 +8,12 @@ ground = pygame.image.load('groundpicture.png')
 #screen.blit(background,(0,0))
 starttime = pygame.time.get_ticks()
 x=0
-
-
+start = 0
+down = 0
+gameover = False
+angle = 0
+score = 0
+passed = False
 class Bird(pygame.sprite.Sprite):#Bird is child class, sprite class is the parent class which is a template.
     def __init__(self, x,y):
         pygame.sprite.Sprite.__init__(self)
@@ -25,26 +29,46 @@ class Bird(pygame.sprite.Sprite):#Bird is child class, sprite class is the paren
         self.rect.center = x,y
         self.velocity = 0
     def update(self):
+        global gameover
         #For the flying:
         #Introducing game physics
-        self.velocity = self.velocity+0.1
+        
+        
+        self.velocity = self.velocity+0.3
         if self.velocity >=8:
             self.velocity = 8
         if self.rect.y <= 700:
             self.rect.y = self.rect.y+self.velocity
         print(self.velocity)
-
+       
+        if gameover == False:
+            if pygame.mouse.get_pressed()[0] == True:
+                self.velocity = -6
 
         #flapping the wings:
-        self.delay = self.delay+1
+        if gameover == False:
+            self.delay = self.delay+1
 
-        if self.delay>5:
-            self.delay = 0
-            self.pictures = self.pictures+1
+            if self.delay>5:
+                self.delay = 0
+                self.pictures = self.pictures+1
 
-            if self.pictures == 3:
-                self.pictures = 0
-            self.image = self.birdimages[self.pictures]
+                if self.pictures == 3:
+                    self.pictures = 0
+                if self.rect.y >= 700:
+                    self.pictures = 0 
+                    gameover = True
+                
+                self.image = self.birdimages[self.pictures]
+                self.image = pygame.transform.rotate(self.birdimages[self.pictures],-2*self.velocity)
+        else:
+            
+               
+            self.image = pygame.transform.rotate(self.birdimages[self.pictures],-90)
+        
+
+
+    
 
 class Pipe(pygame.sprite.Sprite):
     def __init__ (self,x,y,position):
@@ -88,36 +112,56 @@ birdgroup.add(bird)#now bird should have the properties of birgroups
 
 pygame.display.set_caption('Flappy Bird')
 
-
+print(birdgroup.sprites()[0].rect.left)
 
 clock = pygame.time.Clock()
 while True:
     screen.blit(background,(0,0))
+    
     screen.blit(ground,(x,700))
     clock.tick(60)
-    x=x-1
-    if abs(x) >35:
-        x = 0
+   
+    if gameover == False:
+        x=x-1
+        if abs(x) >35:
+            
+            x = 0
     birdgroup.draw(screen)
-    birdgroup.update()
+    if start == 1 and down == 0:
+        birdgroup.update()
+    if bird.rect.y <0 or pygame.sprite.groupcollide(birdgroup,pipes,False,False,):
+        gameover = True
+    #birdgroup.update()
     currenttime = pygame.time.get_ticks()
     y = random.randint(-100,100)
+    if gameover == False:
+        if currenttime-starttime >= 1500:
+            bottompipe = Pipe(800,350+y,1234567)
+            toppipe = Pipe(800,350+y,0)
+            pipes.add(toppipe)
+            pipes.add(bottompipe)
+            starttime = currenttime
     
-    if currenttime-starttime >= 1500:
-        bottompipe = Pipe(800,350+y,1234567)
-        toppipe = Pipe(800,350+y,0)
-        pipes.add(toppipe)
-        pipes.add(bottompipe)
-        starttime = currenttime
-    pipes.draw(screen)
 #Whole update function behind the if condition. 
-
-    pipes.update()
+    
+        if start == 1:
+            pipes.update()
+    pipes.draw(screen)
+    if len(pipes) >=1:
+        if birdgroup.sprites()[0].rect.left > pipes.sprites()[0].rect.right:
+            
+            score = score+1
+            print(score)   
+    
 
 
 
     for event in pygame.event.get():
-       if event.type == QUIT:
+        if event.type == QUIT:
            pygame.quit()
            sys.exit()
+        if event.type == pygame.MOUSEBUTTONUP:
+            start = 1
+           
+        
     pygame.display.update()
