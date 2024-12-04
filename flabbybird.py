@@ -5,15 +5,29 @@ pygame.init()
 screen = pygame.display.set_mode((800, 900))
 background = pygame.image.load('background.png')
 ground = pygame.image.load('groundpicture.png')
+font = pygame.font.SysFont('sans',30)
+restart = pygame.image.load('restart.png')
 #screen.blit(background,(0,0))
 starttime = pygame.time.get_ticks()
 x=0
+m = 0
 start = 0
 down = 0
 gameover = False
 angle = 0
 score = 0
+scores = font.render('Score = ' +str(score),True,'black')
 passed = False
+stopscore = False
+def restart():
+    global start,score
+    start =0
+    bird.rect.y = 45
+    bird.rect.x = 25
+    score = 0
+    pipes.empty()
+
+
 class Bird(pygame.sprite.Sprite):#Bird is child class, sprite class is the parent class which is a template.
     def __init__(self, x,y):
         pygame.sprite.Sprite.__init__(self)
@@ -39,7 +53,7 @@ class Bird(pygame.sprite.Sprite):#Bird is child class, sprite class is the paren
             self.velocity = 8
         if self.rect.y <= 700:
             self.rect.y = self.rect.y+self.velocity
-        print(self.velocity)
+        
        
         if gameover == False:
             if pygame.mouse.get_pressed()[0] == True:
@@ -87,6 +101,8 @@ class Pipe(pygame.sprite.Sprite):
 
     def update(self):
       self.rect.x = self.rect.x-5
+      if self.rect.right <-10:
+        self.kill()
 
     """def create(self):
         #pos = random.randint(0,400)
@@ -119,6 +135,8 @@ while True:
     screen.blit(background,(0,0))
     
     screen.blit(ground,(x,700))
+    screen.blit(scores,(0,0))
+    scores = font.render('Score = ' +str(score),True,'black')
     clock.tick(60)
    
     if gameover == False:
@@ -131,11 +149,16 @@ while True:
         birdgroup.update()
     if bird.rect.y <0 or pygame.sprite.groupcollide(birdgroup,pipes,False,False,):
         gameover = True
+    if gameover == True:
+       # buttonrect = pygame.image.rect()
+
+        restart()
+        gameover = False
     #birdgroup.update()
     currenttime = pygame.time.get_ticks()
     y = random.randint(-100,100)
-    if gameover == False:
-        if currenttime-starttime >= 1500:
+    if gameover == False:#FIX PIPES,
+        if currenttime-starttime >= 1500 and start ==1 :
             bottompipe = Pipe(800,350+y,1234567)
             toppipe = Pipe(800,350+y,0)
             pipes.add(toppipe)
@@ -147,12 +170,45 @@ while True:
         if start == 1:
             pipes.update()
     pipes.draw(screen)
+    """if len(pipes) >=1:
+        if birdgroup.sprites()[0].rect.left > pipes.sprites()[m].rect.right and stopscore == False :
+            passed = True
+            stopscore = True
+
+        if passed == True:
+            score = score+0.5
+            m=m+1
+            passed = False
+            stopscore = False
+            print(score)
+            #print('M is '+str(m))
+        if birdgroup.sprites()[0].rect.left > pipes.sprites()[m].rect.right and stopscore == True:
+            stopscore = False"""
     if len(pipes) >=1:
-        if birdgroup.sprites()[0].rect.left > pipes.sprites()[0].rect.right:
+        if birdgroup.sprites()[0].rect.left > pipes.sprites()[0].rect.left and birdgroup.sprites()[0].rect.right < pipes.sprites()[0].rect.right and passed == False:
+            passed = True
+
+        if passed == True:
             
-            score = score+1
-            print(score)   
-    
+            if birdgroup.sprites()[0].rect.left > pipes.sprites()[0].rect.right:
+                score = score+1
+                m=m+1
+                print(score)
+                passed = False
+        print(passed)
+        print(birdgroup.sprites()[0].rect.left,pipes.sprites()[0].rect.left)
+        print(birdgroup.sprites()[0].rect.right, pipes.sprites()[0].rect.right)
+
+
+
+            
+            
+       
+
+
+
+        
+
 
 
 
